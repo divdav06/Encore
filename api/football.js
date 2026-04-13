@@ -1,11 +1,11 @@
-
 export default async function handler(req, res) {
   const API_KEY = process.env.FOOTBALL_API_KEY;
-  const { type } = req.query; // On récupère le type de demande (live, fixtures, ou results)
+  const { type, league } = req.query; 
   
   let endpoint = 'fixtures?live=all';
-  if (type === 'next') endpoint = 'fixtures?next=20'; // 20 prochains matchs
-  if (type === 'past') endpoint = 'fixtures?last=20'; // 20 derniers matchs
+  if (type === 'next') endpoint = 'fixtures?next=20';
+  if (type === 'past') endpoint = 'fixtures?last=20';
+  if (type === 'standings') endpoint = `standings?league=${league || 39}&season=2025`; // Par défaut Premier League
 
   const options = {
     method: 'GET',
