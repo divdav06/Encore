@@ -1,9 +1,12 @@
-
 export default async function handler(req, res) {
   const API_KEY = process.env.FOOTBALL_API_KEY;
-  const { type, sport } = req.query; // Le site peut maintenant préciser le sport
+  const { type, sport } = req.query;
 
-  // SI C'EST DU TENNIS
+  // Calcul des dates pour le Football
+  const today = new Date();
+  const formatData = (date) => date.toISOString().split('T')[0];
+
+  // 1. GESTION DU TENNIS
   if (sport === 'tennis') {
     const optionsTennis = {
       method: 'GET',
@@ -21,10 +24,23 @@ export default async function handler(req, res) {
     }
   }
 
-  // SINON, PAR DÉFAUT : FOOTBALL (API-SPORTS)
+  // 2. GESTION DU FOOTBALL
   let endpoint = 'fixtures?live=all'; 
-  if (type === 'next') endpoint = 'fixtures?next=15';
-  if (type === 'past') endpoint = 'fixtures?last=15';
+
+  if (type === 'next') {
+    // Du aujourd'hui jusqu'à +14 jours
+    const dateTo = new Date();
+    dateTo.setDate(today.getDate() + 14);
+    endpoint = `fixtures?from=${formatData(today)}&to=${formatData(dateTo)}`;
+  } 
+  else if (type === 'past') {
+    // De il y a 7 jours jusqu'à hier
+    const dateFrom = new Date();
+    dateFrom.setDate(today.getDate() - 7);
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    endpoint = `fixtures?from=${formatData(dateFrom)}&to=${formatData(yesterday)}`;
+  }
 
   const optionsFoot = {
     method: 'GET',
@@ -42,3 +58,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Erreur Football" });
   }
 }
+
