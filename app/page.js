@@ -1,8 +1,9 @@
+
 export default function Home() {
   return (
-    <main style={{padding: 20}}>
-      <h1>Selma App ⚽</h1>
-      <p>Bienvenue sur ton site de statistiques sportives</p>
+    <main style={{ padding: 20 }}>
+      <h1>Selma App</h1>
+      <p>Bienvenue sur ton site de statistiques sportives !</p>
     </main>
   );
 }
