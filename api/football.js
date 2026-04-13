@@ -2,11 +2,10 @@ export default async function handler(req, res) {
   const API_KEY = process.env.FOOTBALL_API_KEY;
   const { type, sport } = req.query;
 
-  // Calcul des dates pour le Football
   const today = new Date();
   const formatData = (date) => date.toISOString().split('T')[0];
 
-  // 1. GESTION DU TENNIS
+  // --- PARTIE TENNIS ---
   if (sport === 'tennis') {
     const optionsTennis = {
       method: 'GET',
@@ -24,19 +23,17 @@ export default async function handler(req, res) {
     }
   }
 
-  // 2. GESTION DU FOOTBALL
+  // --- PARTIE FOOTBALL ---
   let endpoint = 'fixtures?live=all'; 
 
   if (type === 'next') {
-    // Du aujourd'hui jusqu'à +14 jours
     const dateTo = new Date();
-    dateTo.setDate(today.getDate() + 14);
+    dateTo.setDate(today.getDate() + 14); // + 2 semaines
     endpoint = `fixtures?from=${formatData(today)}&to=${formatData(dateTo)}`;
   } 
   else if (type === 'past') {
-    // De il y a 7 jours jusqu'à hier
     const dateFrom = new Date();
-    dateFrom.setDate(today.getDate() - 7);
+    dateFrom.setDate(today.getDate() - 7); // - 1 semaine
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
     endpoint = `fixtures?from=${formatData(dateFrom)}&to=${formatData(yesterday)}`;
@@ -46,11 +43,12 @@ export default async function handler(req, res) {
     method: 'GET',
     headers: {
       'x-rapidapi-key': API_KEY,
-      'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
+      'x-rapidapi-host': 'api-football-v1.p.rapidapi.com' // Hôte le plus stable
     }
   };
 
   try {
+    // Utilisation de l'URL RapidAPI (plus fiable que api-sports.io en direct)
     const response = await fetch(`https://api-football-v1.p.rapidapi.com/v3/${endpoint}`, optionsFoot);
     const data = await response.json();
     res.status(200).json(data);
@@ -58,4 +56,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Erreur Football" });
   }
 }
+
 
