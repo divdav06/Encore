@@ -1,42 +1,48 @@
+async function chargerMatchs(type) {
+    const conteneur = document.getElementById('matchs-liste');
+    conteneur.innerHTML = '<p>Chargement des matchs...</p>';
 
-export default async function handler(req, res) {
-  const API_KEY = process.env.FOOTBALL_API_KEY;
-  const { type, sport } = req.query;
+    try {
+        // Utilisation du lien relatif : c'est la solution la plus fiable
+        const response = await fetch(`/api/football?type=${type}`);
+        const data = await response.json();
 
-  const today = new Date();
-  const formatData = (date) => date.toISOString().split('T')[0];
+        // On vide le message de chargement
+        conteneur.innerHTML = '';
 
-  try {
-    // --- TENNIS ---
-    if (sport === 'tennis') {
-      const response = await fetch('https://ultimate-tennis1.p.rapidapi.com/tournaments/live', {
-        headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': 'ultimate-tennis1.p.rapidapi.com' }
-      });
-      const data = await response.json();
-      return res.status(200).json(data);
+        // DEBUG : Si l'API renvoie une erreur au lieu de matchs
+        if (data.errors && Object.keys(data.errors).length > 0) {
+            conteneur.innerHTML = `<p style="color: red;">Erreur API : ${JSON.stringify(data.errors)}</p>`;
+            return;
+        }
+
+        // Vérification si on a des matchs dans la réponse (Format API-Football)
+        const matchs = data.response || [];
+
+        if (matchs.length === 0) {
+            conteneur.innerHTML = '<p>Aucun match trouvé pour cette période.</p>';
+            return;
+        }
+
+        // Affichage des matchs
+        matchs.forEach(match => {
+            const matchElement = document.createElement('div');
+            matchElement.className = 'match-card';
+            matchElement.innerHTML = `
+                <div class="equipes">
+                    <span>${match.teams.home.name}</span>
+                    <span class="score">${match.goals.home ?? ''} - ${match.goals.away ?? ''}</span>
+                    <span>${match.teams.away.name}</span>
+                </div>
+                <div class="info">${match.league.name} - ${new Date(match.fixture.date).toLocaleTimeString([], {hour: '2d', minute:'2d'})}</div>
+            `;
+            conteneur.innerHTML += matchElement.innerHTML;
+        });
+
+    } catch (error) {
+        console.error("Erreur:", error);
+        conteneur.innerHTML = '<p>Erreur de connexion au serveur.</p>';
     }
-
-    // --- FOOTBALL ---
-    let endpoint = 'fixtures?live=all'; 
-    if (type === 'next') {
-      const dateTo = new Date();
-      dateTo.setDate(today.getDate() + 14);
-      endpoint = `fixtures?from=${formatData(today)}&to=${formatData(dateTo)}`;
-    } else if (type === 'past') {
-      const dateFrom = new Date();
-      dateFrom.setDate(today.getDate() - 7);
-      endpoint = `fixtures?from=${formatData(dateFrom)}&to=${formatData(today)}`;
-    }
-
-    const response = await fetch(`https://api-football-v1.p.rapidapi.com/v3/${endpoint}`, {
-      headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': 'api-football-v1.p.rapidapi.com' }
-    });
-
-    const data = await response.json();
-    res.status(200).json(data);
-
-  } catch (error) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
 }
+
 
